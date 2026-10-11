@@ -1,0 +1,7 @@
+{
+  "name": "AlgoPlanR",
+  "description": "Plateforme d’analyse, de planification et d’aide à la décision sur les ressources et l'affectation des enseignants.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

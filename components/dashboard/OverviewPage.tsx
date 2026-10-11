@@ -10,7 +10,7 @@
  */
 
 import { useMemo } from 'react'
-import { ArrowRight, BarChart3, FileText, FlaskConical, Lightbulb, RefreshCw, Upload } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BarChart3, FileText, FlaskConical, Lightbulb, MapPin, RefreshCw, Upload } from 'lucide-react'
 import { trierParPriorite } from '@/lib/analytics/diagnostic'
 import { MENTION_SIMULATION, pointsAttention, reductionDuDeficit, syntheseTableauDeBord } from '@/lib/analytics/narrative'
 import { libelleNiveauEnfants } from '@/lib/analytics/territory'
@@ -326,23 +326,34 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
         ))}
       </nav>
 
-      <div className="action-bar">
+      <div className="action-bar" style={{ gap: '12px' }}>
         <p className="hint">
           Scénario affiché : <strong>{scenarioNom}</strong>
         </p>
-        {calculEnCours ? (
-          <span className="busy">
-            <RefreshCw size={15} className="spin" aria-hidden="true" /> Calcul des scénarios…
-          </span>
-        ) : comparaison.length === 0 ? (
-          <button type="button" className="btn btn-primary" onClick={calculerScenariosDeBase}>
-            Calculer les scénarios de redéploiement
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-sm" onClick={() => setPage('territoires')} title="Ouvrir la cartographie et l'arbre territorial">
+            <MapPin size={13} aria-hidden="true" /> Carte du Cameroun
           </button>
-        ) : (
-          <button type="button" className="btn" onClick={() => setPage('comparison')}>
-            Comparer les scénarios <ArrowRight size={14} aria-hidden="true" />
+          <button type="button" className="btn btn-sm" onClick={() => setPage('priorites')} title="Voir le classement des écoles par urgence">
+            <AlertTriangle size={13} aria-hidden="true" /> Écoles prioritaires
           </button>
-        )}
+          <button type="button" className="btn btn-sm" onClick={() => setPage('reports')} title="Consulter et exporter les rapports officiels">
+            <FileText size={13} aria-hidden="true" /> Exporter le rapport
+          </button>
+          {calculEnCours ? (
+            <span className="busy">
+              <RefreshCw size={15} className="spin" aria-hidden="true" /> Calcul des scénarios…
+            </span>
+          ) : comparaison.length === 0 ? (
+            <button type="button" className="btn btn-primary btn-sm" onClick={calculerScenariosDeBase}>
+              Calculer les scénarios
+            </button>
+          ) : (
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setPage('comparison')}>
+              Comparer les scénarios <ArrowRight size={13} aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="kpi-row">

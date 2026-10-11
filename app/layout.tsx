@@ -20,9 +20,9 @@ const sourceSans = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'ALGOPLANR — Affectation des enseignants',
+  title: 'AlgoPlanR — Affectation des enseignants',
   description:
-    "Analyse des besoins, répartition territoriale et simulation de scénarios d'affectation. Traitement entièrement local, sans transmission de données.",
+    "Plateforme d’analyse, de planification et d’aide à la décision sur les ressources et l'affectation des enseignants.",
   icons: {
     icon: [{ url: '/icon-logo-64.png', type: 'image/png', sizes: '64x64' }],
     apple: '/apple-icon-logo.png',
@@ -36,10 +36,14 @@ export const viewport: Viewport = {
   themeColor: '#027174',
 }
 
+import { ToastProvider } from '@/src/shared/ui/Toast'
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${figtree.variable} ${sourceSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   )
 }

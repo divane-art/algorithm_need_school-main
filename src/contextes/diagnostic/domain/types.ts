@@ -1,0 +1,5 @@
+export type { SchoolDiagnostic, SchoolSeverity, Zone, ZoneSecurite } from '@/types/education'
+export { runDiagnostic } from '@/lib/analytics/diagnostic'
+export { syntheseTerritoriale } from '@/lib/analytics/synthese'
+export { trierParPriorite, raisonsPriorite } from '@/lib/analytics/diagnostic'
+export { diagnosticTerritorial } from '@/lib/analytics/narrative'

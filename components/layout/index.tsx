@@ -5,9 +5,10 @@
  * fil d'Ariane territorial et barre de filtres globaux.
  */
 
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 // ACCÈS DÉSACTIVÉ : `LogOut` et `UserRound` ne servent qu'à la personne connectée, à réimporter avec elle.
-import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, ShieldCheck, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, Server, ShieldCheck, Trash2, X } from 'lucide-react'
+import { apiClient } from '@/src/shared/api/client'
 import type { SchoolSeverity, Zone, ZoneSecurite } from '@/types/education'
 import { LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '@/lib/simulation/libelles'
 import type { GlobalFilters, TerritorySelection } from '@/lib/analytics/territory'

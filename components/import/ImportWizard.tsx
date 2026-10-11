@@ -16,7 +16,20 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Check, FileSpreadsheet, FlaskConical, Play, RefreshCw, ShieldCheck, Upload, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  BarChart3,
+  Check,
+  FileSpreadsheet,
+  FlaskConical,
+  GitCompare,
+  MapPin,
+  Play,
+  RefreshCw,
+  ShieldCheck,
+  Upload,
+  X,
+} from 'lucide-react'
 import type { DataQualityReport } from '@/types/data-quality'
 import { applyManualMapping, fieldsFor, SEUIL_CONFIRMATION, type DatasetKind } from '@/lib/data/column-mapping'
 import { construireDataset, lireClasseur, type FichierLu } from '@/lib/data/import'
@@ -316,6 +329,96 @@ function EtapeFichiers({
 }) {
   return (
     <div className="stack">
+      {/* Bandeau d'accueil institutionnel et attractif */}
+      <div
+        className="welcome"
+        style={{
+          borderLeft: '4px solid var(--primary)',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f4f9f9 100%)',
+          padding: '24px 28px',
+        }}
+      >
+        <img className="welcome-logo" src="/logo-full.png" alt="AlgoPlanR" width={170} height={113} />
+        <div style={{ flex: 1 }}>
+          <span className="eyebrow" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+            Système d’Aide à la Décision · MINEDUB Cameroun
+          </span>
+          <h2 style={{ fontSize: '1.45rem', margin: '4px 0 8px', color: 'var(--navy)' }}>
+            Planification & Affectation Équitable des Enseignants
+          </h2>
+          <p style={{ fontSize: '0.925rem', lineHeight: 1.5, color: 'var(--ink-soft)', margin: 0 }}>
+            Outil institutionnel d’analyse des ratios élèves/maître, de résorption des déficits critiques et de modélisation
+            des flux d’affectation selon l’algorithme d’acceptation différée de Gale-Shapley.
+          </p>
+        </div>
+      </div>
+
+      {/* 4 piliers interactifs de la plateforme */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '12px',
+        }}
+      >
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', padding: '14px 16px', boxShadow: 'var(--shadow-s)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--accent-bg)', display: 'grid', placeItems: 'center', color: 'var(--primary)' }}>
+              <BarChart3 size={17} />
+            </div>
+            <strong style={{ fontSize: '13.5px', color: 'var(--ink)' }}>Diagnostic Moteur A</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-faint)', lineHeight: 1.45 }}>
+            Calcul automatisé des dotations cibles, identification fine des besoins et des excédents mobilisables.
+          </p>
+        </div>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', padding: '14px 16px', boxShadow: 'var(--shadow-s)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--ok-bg)', display: 'grid', placeItems: 'center', color: 'var(--ok)' }}>
+              <GitCompare size={17} />
+            </div>
+            <strong style={{ fontSize: '13.5px', color: 'var(--ink)' }}>Algorithme Gale-Shapley</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-faint)', lineHeight: 1.45 }}>
+            Appariement transparent conciliant barèmes individuels, vœux et priorités d’établissement.
+          </p>
+        </div>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', padding: '14px 16px', boxShadow: 'var(--shadow-s)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 6, background: '#fdf4e3', display: 'grid', placeItems: 'center', color: '#8a5a10' }}>
+              <MapPin size={17} />
+            </div>
+            <strong style={{ fontSize: '13.5px', color: 'var(--ink)' }}>Territoires & Sécurité</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-faint)', lineHeight: 1.45 }}>
+            Cartographie interactive sur les 10 régions du Cameroun et régulation par zone de sécurité.
+          </p>
+        </div>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--radius-s)', padding: '14px 16px', boxShadow: 'var(--shadow-s)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--info-bg)', display: 'grid', placeItems: 'center', color: 'var(--info)' }}>
+              <FileSpreadsheet size={17} />
+            </div>
+            <strong style={{ fontSize: '13.5px', color: 'var(--ink)' }}>Rapports Décisionnels</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: 'var(--ink-faint)', lineHeight: 1.45 }}>
+            Procès-verbaux et rapports officiels téléchargeables instantanément aux formats Word et Excel.
+          </p>
+        </div>
+      </div>
+
+      {/* Séparateur pour les fichiers personnalisés */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '8px 0 2px' }}>
+        <div style={{ flex: 1, height: 1, backgroundColor: 'var(--line)' }} />
+        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Ou importez vos classeurs de travail
+        </span>
+        <div style={{ flex: 1, height: 1, backgroundColor: 'var(--line)' }} />
+      </div>
+
       <div className="upload-cards">
         {(['etablissements', 'enseignants'] as DatasetKind[]).map(kind => {
           const fichier = fichiers[kind]
@@ -398,7 +501,7 @@ function EtapeFichiers({
           <span className="btn-count">{[fichiers.etablissements, fichiers.enseignants].filter(Boolean).length}/2</span>
         </button>
         <button type="button" className="btn" disabled={enCours} onClick={onDemo}>
-          <FlaskConical size={15} aria-hidden="true" /> Explorer avec des données de démonstration
+          <FlaskConical size={15} aria-hidden="true" /> Explorer avec les données de démonstration
         </button>
       </div>
 

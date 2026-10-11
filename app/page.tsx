@@ -9,25 +9,25 @@
  * de bureau, qui sert un export statique sans serveur.
  */
 
+import { useRef, useEffect } from 'react'
 import { AlertTriangle, Check, RefreshCw } from 'lucide-react'
 import { FILTRES_VIDES } from '@/lib/analytics/territory'
 import { LIBELLE_SCOPE } from '@/lib/simulation/scenarios'
 import { Notice, Pill } from '@/components/common'
 import { FilterBar, PageHeader, Sidebar, TerritoryBreadcrumb, Topbar } from '@/components/layout'
 import { BandeauMiseAJour, useMiseAJour } from '@/components/layout/MiseAJour'
-import { ImportWizard } from '@/components/import/ImportWizard'
-import { OverviewPage } from '@/components/dashboard/OverviewPage'
-import { NationalDiagnosticPage, PrioritySchoolsPage, TerritoriesPage } from '@/components/diagnostic'
-import { SchoolsPage } from '@/components/schools'
-import { TeachersPage } from '@/components/teachers'
-import { PrincePage } from '@/components/prince'
-import { ArbitragePage, ProjectionsPage, RecrutesPage, VoeuxPage } from '@/components/plan'
-import { ComparisonPage, SimulationsPage } from '@/components/simulations'
-import { ReportPage } from '@/components/reports/ReportPage'
-import { MethodologyPage } from '@/components/methodology/MethodologyPage'
-import { ReferentialPage } from '@/components/settings/ReferentialPage'
-import { EnginePage } from '@/components/settings/EnginePage'
-import { AssignmentsPage, DataPage, LogsPage, PoolPage, PostsPage, UnassignedPage } from '@/components/analyst'
+import { useToast } from '@/src/shared/ui/Toast'
+import {
+  ContextDonnees,
+  ContextParametrage,
+  ContextDiagnostic,
+  ContextPrince,
+  ContextSimulation,
+  ContextArbitrage,
+  ContextRecrutement,
+  ContextRapports,
+  ContextMethodologie,
+} from '@/src/contextes'
 import { usePlanningState } from '@/components/usePlanningState'
 // ACCÈS DÉSACTIVÉ — voir la note au-dessus de `Page`.
 // import { AccesPage } from '@/components/acces/AccesPage'
@@ -92,6 +92,7 @@ function Application({ session }: { session: SessionAcces }) {
     resultatAffiche,
   } = store
 
+  const toast = useToast()
   const miseAJour = useMiseAJour()
   const estDrh = session.role === 'drh'
   // ACCÈS DÉSACTIVÉ : plus d'entrées de délégués à valider.
@@ -100,13 +101,28 @@ function Application({ session }: { session: SessionAcces }) {
   /** Une page réservée au DRH n'est jamais rendue pour un délégué, quel que soit le lien suivi. */
   const pageInterdite = !estDrh && pageReserveeAuDrh(page)
 
-  // ACCÈS DÉSACTIVÉ : sans connexion, pas de déconnexion.
-  // function deconnecter() {
-  //   const confirme =
-  //     !donneesChargees ||
-  //     window.confirm('Se déconnecter ?\n\nLes données importées et les résultats calculés seront effacés de cette session.')
-  //   if (confirme) acces.deconnecter()
-  // }
+  // Notifications dynamiques lors des changements d'état
+  const prevDonneesRef = useRef(donneesChargees)
+  useEffect(() => {
+    if (!prevDonneesRef.current && donneesChargees) {
+      toast.success(
+        dataset?.demonstration
+          ? 'Jeu de démonstration chargé avec succès (50 écoles, 200 enseignants).'
+          : 'Fichiers importés et validés avec succès.',
+        'Données prêtes',
+      )
+    }
+    prevDonneesRef.current = donneesChargees
+  }, [donneesChargees, dataset?.demonstration, toast])
+
+  const prevSimuRef = useRef(simulationPrete)
+  useEffect(() => {
+    if (!prevSimuRef.current && simulationPrete) {
+      toast.success('Les 3 scénarios géographiques de référence ont été calculés.', 'Simulation prête')
+    }
+    prevSimuRef.current = simulationPrete
+  }, [simulationPrete, toast])
+
   const nomScenario = scenarios.find(s => s.id === scenarioActif)?.nom ?? 'Situation actuelle'
 
   const etat = calculEnCours ? (
@@ -133,7 +149,10 @@ function Application({ session }: { session: SessionAcces }) {
       window.confirm(
         "Effacer les données de cette session ?\n\nLes fichiers importés, les résultats calculés et les préférences enregistrées seront supprimés de cette session. Cette action est immédiate et irréversible.",
       )
-    if (confirme) effacerSession()
+    if (confirme) {
+      effacerSession()
+      toast.info('Toutes les données en mémoire et préférences ont été réinitialisées.', 'Session effacée')
+    }
   }
 
   return (
@@ -229,31 +248,31 @@ function Application({ session }: { session: SessionAcces }) {
                 </>
               )}
 
-              {page === 'import' && <ImportWizard store={store} />}
-              {page === 'overview' && <OverviewPage store={store} />}
-              {page === 'diagnostic' && <NationalDiagnosticPage store={store} />}
-              {page === 'territoires' && <TerritoriesPage store={store} />}
-              {page === 'priorites' && <PrioritySchoolsPage store={store} />}
-              {page === 'schools' && <SchoolsPage store={store} />}
-              {page === 'teachers' && <TeachersPage store={store} />}
-              {page === 'prince' && estDrh && <PrincePage store={store} />}
+              {page === 'import' && <ContextDonnees.ImportWizard store={store} />}
+              {page === 'overview' && <ContextDiagnostic.OverviewPage store={store} />}
+              {page === 'diagnostic' && <ContextDiagnostic.NationalDiagnosticPage store={store} />}
+              {page === 'territoires' && <ContextDiagnostic.TerritoriesPage store={store} />}
+              {page === 'priorites' && <ContextDiagnostic.PrioritySchoolsPage store={store} />}
+              {page === 'schools' && <ContextDonnees.SchoolsPage store={store} />}
+              {page === 'teachers' && <ContextDonnees.TeachersPage store={store} />}
+              {page === 'prince' && estDrh && <ContextPrince.PrincePage store={store} />}
               {/* ACCÈS DÉSACTIVÉ : {page === 'acces' && estDrh && <AccesPage acces={acces} />} */}
-              {page === 'simulations' && <SimulationsPage store={store} />}
-              {page === 'voeux' && <VoeuxPage store={store} />}
-              {page === 'arbitrage' && <ArbitragePage store={store} />}
-              {page === 'recrutes' && <RecrutesPage store={store} />}
-              {page === 'projections' && <ProjectionsPage store={store} />}
-              {page === 'comparison' && <ComparisonPage store={store} />}
-              {page === 'reports' && <ReportPage store={store} />}
-              {page === 'methodology' && <MethodologyPage store={store} />}
-              {page === 'settings' && estDrh && <ReferentialPage store={store} />}
-              {page === 'engine' && estDrh && <EnginePage store={store} />}
-              {page === 'data' && <DataPage store={store} />}
-              {page === 'pool' && <PoolPage store={store} />}
-              {page === 'posts' && <PostsPage store={store} />}
-              {page === 'assignments' && <AssignmentsPage store={store} />}
-              {page === 'unassigned' && <UnassignedPage store={store} />}
-              {page === 'logs' && <LogsPage store={store} />}
+              {page === 'simulations' && <ContextSimulation.SimulationsPage store={store} />}
+              {page === 'voeux' && <ContextSimulation.VoeuxPage store={store} />}
+              {page === 'arbitrage' && <ContextArbitrage.ArbitragePage store={store} />}
+              {page === 'recrutes' && <ContextRecrutement.RecrutesPage store={store} />}
+              {page === 'projections' && <ContextSimulation.ProjectionsPage store={store} />}
+              {page === 'comparison' && <ContextSimulation.ComparisonPage store={store} />}
+              {page === 'reports' && <ContextRapports.ReportPage store={store} />}
+              {page === 'methodology' && <ContextMethodologie.MethodologyPage store={store} />}
+              {page === 'settings' && estDrh && <ContextParametrage.ReferentialPage store={store} />}
+              {page === 'engine' && estDrh && <ContextParametrage.EnginePage store={store} />}
+              {page === 'data' && <ContextDonnees.DataPage store={store} />}
+              {page === 'pool' && <ContextSimulation.PoolPage store={store} />}
+              {page === 'posts' && <ContextSimulation.PostsPage store={store} />}
+              {page === 'assignments' && <ContextSimulation.AssignmentsPage store={store} />}
+              {page === 'unassigned' && <ContextSimulation.UnassignedPage store={store} />}
+              {page === 'logs' && <ContextSimulation.LogsPage store={store} />}
             </div>
           </main>
         </div>
