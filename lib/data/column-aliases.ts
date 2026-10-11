@@ -1,0 +1,495 @@
+/**
+ * Dictionnaire local des colonnes attendues et de leurs alias.
+ *
+ * La reconnaissance des colonnes se fait entièrement hors ligne : nom exact,
+ * puis alias de ce dictionnaire, puis comparaison normalisée, puis comparaison
+ * approchante locale. Aucun service externe n'est appelé (contrainte §
+ * « fonctionnement 100 % local »).
+ */
+
+export interface FieldDefinition {
+  /** Nom du champ métier, tel qu'utilisé dans le code et l'UI avancée. */
+  champ: string
+  /** Libellé lisible affiché à un utilisateur non technique. */
+  label: string
+  /** Colonne indispensable au calcul : son absence bloque l'analyse. */
+  requis: boolean
+  /** Ce que l'on perd si la colonne est absente (affiché en clair). */
+  consequence: string
+  /** Noms de colonnes acceptés, en plus du nom canonique. */
+  alias: string[]
+}
+
+export const SCHOOL_FIELDS: FieldDefinition[] = [
+  {
+    champ: 'id',
+    label: "Code de l'établissement",
+    requis: true,
+    consequence: 'Sans identifiant, les enseignants ne peuvent pas être rattachés à leur école.',
+    alias: ['id_etab', 'code_etab', 'code_etablissement', 'code_ecole', 'matricule_etab', 'id_ecole', 'code', 'identifiant_ecole', 'identifiant_etablissement'],
+  },
+  {
+    champ: 'nom',
+    label: "Nom de l'établissement",
+    requis: false,
+    consequence: "Le code de l'établissement sert de libellé dans les tableaux et la fiche école.",
+    alias: ['nom_etab', 'nom_etablissement', 'nom_ecole', 'libelle_etab', 'etablissement', 'ecole'],
+  },
+  {
+    champ: 'region',
+    label: 'Région',
+    requis: true,
+    consequence: "L'analyse territoriale et la carte ne peuvent pas être construites.",
+    alias: ['region', 'nom_region', 'regions', 'libelle_region'],
+  },
+  {
+    champ: 'departement',
+    label: 'Département',
+    requis: true,
+    consequence: 'Le scénario départemental ne peut pas être calculé.',
+    alias: ['departement', 'nom_departement', 'dept', 'departements'],
+  },
+  {
+    champ: 'commune',
+    label: 'Commune',
+    requis: true,
+    consequence: 'Le scénario local (même commune) ne peut pas être calculé.',
+    alias: ['commune', 'nom_commune', 'arrondissement', 'communes'],
+  },
+  {
+    champ: 'iaeb',
+    label: 'Circonscription IAEB',
+    requis: false,
+    consequence: "La proximité ne distingue pas les écoles d'une même inspection d'arrondissement.",
+    alias: ['circonscription_iaeb', 'iaeb', 'circonscription', 'inspection', 'inspection_arrondissement'],
+  },
+  {
+    champ: 'latitude',
+    label: 'Latitude',
+    requis: false,
+    consequence: "Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).",
+    alias: ['latitude', 'lat', 'gps_latitude', 'y'],
+  },
+  {
+    champ: 'longitude',
+    label: 'Longitude',
+    requis: false,
+    consequence: "Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).",
+    alias: ['longitude', 'lon', 'lng', 'long', 'gps_longitude', 'x'],
+  },
+  {
+    champ: 'zone',
+    label: 'Zone',
+    requis: false,
+    consequence: 'Les règles liées aux zones rurales ou urbaines sont neutralisées.',
+    alias: ['zone', 'milieu', 'type_zone', 'zone_etab'],
+  },
+  {
+    champ: 'typeEtab',
+    label: "Type d'établissement",
+    requis: false,
+    consequence: "Les règles spécifiques par type d'établissement sont neutralisées.",
+    alias: ['type_etab', 'type', 'type_etablissement', 'categorie', 'statut_etab'],
+  },
+  {
+    champ: 'nbClasses',
+    label: 'Nombre de classes',
+    requis: false,
+    consequence: "Les niveaux ouverts sont déduits des effectifs, ou fixés à six ; sans effectif d'élèves, le besoin ne peut pas être calculé.",
+    alias: ['nb_classes', 'nombre_classes', 'classes', 'total_classes', 'nbre_classes'],
+  },
+  {
+    champ: 'sallesSimpleFlux',
+    label: 'Salles en simple flux',
+    requis: false,
+    consequence: 'Le total des salles utilisables est lu dans la colonne « nombre de salles ».',
+    alias: ['salles_simple_flux', 'nb_salles_simple_flux', 'simple_flux', 'salles_sf'],
+  },
+  {
+    champ: 'nbSallesClasse',
+    label: 'Nombre de salles de classe',
+    requis: false,
+    consequence: "BMAX ne peut pas être calculé : le besoin n'est pas plafonné par les salles et les salles manquantes ne sont pas repérées.",
+    alias: ['nb_salles_classe', 'nb_salles', 'salles_classe', 'nombre_salles', 'total_salles', 'salles_utilisables', 'salles_disponibles'],
+  },
+  {
+    champ: 'sallesDoubleFlux',
+    label: 'Salles en double flux',
+    requis: false,
+    consequence: 'Toutes les salles sont comptées en simple flux : une salle = un maître.',
+    alias: ['salles_double_flux', 'nb_salles_double_flux', 'double_flux', 'salles_df', 'nb_double_flux'],
+  },
+  {
+    champ: 'niveauxOuverts',
+    label: 'Niveaux ouverts',
+    requis: false,
+    consequence: 'Les niveaux ouverts sont déduits des effectifs par niveau, ou des classes dans la limite de six.',
+    alias: ['niveaux_ouverts', 'nb_niveaux', 'nombre_niveaux', 'niveaux'],
+  },
+  {
+    champ: 'departsConnus',
+    label: 'Départs connus à la rentrée',
+    requis: false,
+    consequence: "Les départs connus sont déduits du fichier des enseignants (âge de la retraite atteint à la rentrée).",
+    alias: ['departs_connus', 'nb_departs', 'departs_retraite', 'retraites', 'nb_retraites'],
+  },
+  {
+    champ: 'sousSysteme',
+    label: "Sous-système d'enseignement",
+    requis: false,
+    consequence: 'Francophones et anglophones ne peuvent pas être traités séparément : tous les postes sont considérés compatibles.',
+    alias: ['sous_systeme', 'sous_systeme_enseignement', 'langue', 'langue_enseignement', 'section', 'subsystem', 'sous_systeme_ecole'],
+  },
+  {
+    champ: 'zoneSecurite',
+    label: 'Zone de sécurité',
+    requis: false,
+    consequence: 'Toutes les écoles sont considérées en zone verte : aucun point de sécurité, règle de la zone rouge sans effet.',
+    alias: ['zone_securite', 'securite', 'cote_securite', 'niveau_securite', 'zone_de_securite', 'securite_zone'],
+  },
+  {
+    champ: 'accessibilite',
+    label: 'Accessibilité',
+    requis: false,
+    consequence: "L'accessibilité est déduite de la zone (urbain ou rural) ; « rural enclavé » ne peut pas être distingué.",
+    alias: ['accessibilite', 'enclavement', 'acces', 'zone_accessibilite', 'enclave', 'accessibilite_zone'],
+  },
+  {
+    champ: 'nbEnseignantsEtat',
+    label: "Enseignants payés par l'État",
+    requis: true,
+    consequence: "Sans effectif d'enseignants, ni le besoin ni l'excédent ne peuvent être calculés.",
+    alias: [
+      'nb_enseignants_etat',
+      'enseignants_etat',
+      'nb_ens_etat',
+      'effectif_enseignants_etat',
+      'nombre_enseignants_etat',
+      'personnel_etat',
+      'enseignants_actuels',
+      'nb_enseignants_actuels',
+    ],
+  },
+  {
+    champ: 'nbAutresEnseignants',
+    label: 'Autres enseignants',
+    requis: false,
+    consequence: "Le ratio élèves par enseignant toutes catégories n'est pas calculé.",
+    alias: [
+      'nb_autres_enseignants',
+      'autres_enseignants',
+      'nb_maitres_parents',
+      'maitres_parents',
+      'enseignants_non_etat',
+      'nb_ens_autres',
+    ],
+  },
+  {
+    champ: 'nbPostesOuvertsDeclares',
+    label: 'Postes ouverts déclarés',
+    requis: false,
+    consequence: "L'écart entre besoin calculé et postes officiellement déclarés n'est pas affiché.",
+    alias: ['nb_postes_ouverts', 'postes_ouverts', 'postes_declares', 'nb_postes', 'besoin_declare'],
+  },
+  {
+    champ: 'classesMultigrades',
+    label: 'Classes multigrades',
+    requis: false,
+    consequence: 'Les priorités liées aux classes multigrades sont neutralisées.',
+    alias: ['classes_multigrades', 'nb_classes_multigrades', 'multigrades', 'classes_multigrade'],
+  },
+  {
+    champ: 'prioriteLocale',
+    label: 'Priorité locale',
+    requis: false,
+    consequence: "Le rang de priorité déclaré localement n'est pas pris en compte.",
+    alias: ['priorite_locale', 'priorite', 'rang_priorite', 'ordre_priorite'],
+  },
+  {
+    champ: 'effectifTotalEleves',
+    label: "Effectif total d'élèves",
+    requis: false,
+    consequence: 'Les indicateurs pédagogiques (élèves par enseignant, pression) ne sont pas calculés.',
+    alias: ['effectif_total_eleves', 'total_eleves', 'effectif_eleves', 'nb_eleves', 'effectif_total', 'eleves', 'effectif_eleves_attendus', 'eleves_attendus'],
+  },
+  {
+    champ: 'effectifFilles',
+    label: 'Effectif filles',
+    requis: false,
+    consequence: "La répartition par sexe n'est pas affichée.",
+    alias: ['effectif_filles', 'total_filles', 'nb_filles', 'filles'],
+  },
+  {
+    champ: 'effectifGarcons',
+    label: 'Effectif garçons',
+    requis: false,
+    consequence: "La répartition par sexe n'est pas affichée.",
+    alias: ['effectif_garcons', 'total_garcons', 'nb_garcons', 'garcons'],
+  },
+  {
+    champ: 'effectifCI',
+    label: 'Effectif CI',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_ci', 'ci', 'eleves_ci', 'nb_ci', 'sil'],
+  },
+  {
+    champ: 'effectifCP',
+    label: 'Effectif CP',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_cp', 'cp', 'eleves_cp', 'nb_cp'],
+  },
+  {
+    champ: 'effectifCE1',
+    label: 'Effectif CE1',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_ce1', 'ce1', 'eleves_ce1', 'nb_ce1'],
+  },
+  {
+    champ: 'effectifCE2',
+    label: 'Effectif CE2',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_ce2', 'ce2', 'eleves_ce2', 'nb_ce2'],
+  },
+  {
+    champ: 'effectifCM1',
+    label: 'Effectif CM1',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_cm1', 'cm1', 'eleves_cm1', 'nb_cm1'],
+  },
+  {
+    champ: 'effectifCM2',
+    label: 'Effectif CM2',
+    requis: false,
+    consequence: "L'effectif moyen par niveau est calculé sur les seuls niveaux renseignés.",
+    alias: ['effectif_cm2', 'cm2', 'eleves_cm2', 'nb_cm2'],
+  },
+]
+
+export const TEACHER_FIELDS: FieldDefinition[] = [
+  {
+    champ: 'id',
+    label: "Matricule de l'enseignant",
+    requis: true,
+    consequence: "Sans identifiant, les doublons et les affectations ne peuvent pas être contrôlés.",
+    alias: ['id_ens', 'matricule', 'code_ens', 'id_enseignant', 'matricule_ens', 'matricule_enseignant'],
+  },
+  {
+    champ: 'nom',
+    label: 'Nom',
+    requis: false,
+    consequence: "Les propositions d'affectation ne seraient pas identifiables.",
+    alias: ['nom', 'nom_ens', 'nom_enseignant', 'nom_famille', 'noms', 'nom_prenoms'],
+  },
+  {
+    champ: 'prenom',
+    label: 'Prénom',
+    requis: false,
+    consequence: "L'identification des enseignants est moins précise.",
+    alias: ['prenom', 'prenoms', 'prenom_ens'],
+  },
+  {
+    champ: 'dateNaissance',
+    label: 'Date de naissance',
+    requis: false,
+    consequence: "Les règles liées à l'âge sont neutralisées pour les enseignants concernés.",
+    alias: ['date_naissance', 'naissance', 'date_de_naissance', 'ddn', 'né_le'],
+  },
+  {
+    champ: 'age',
+    label: 'Âge',
+    requis: false,
+    consequence: "L'âge est calculé à partir de la date de naissance ; sans l'un ni l'autre, les règles liées à l'âge et à la retraite sont neutralisées.",
+    alias: ['age', 'age_ans', 'age_enseignant'],
+  },
+  {
+    champ: 'idEtabAttache',
+    label: "École de rattachement",
+    requis: true,
+    consequence: "Sans école d'attache, l'excédent mobilisable ne peut pas être respecté.",
+    alias: ['id_etab_attache', 'id_etab', 'code_etab', 'etablissement_attache', 'ecole_attache', 'code_ecole', 'ecole_attache_actuelle', 'identifiant_ecole'],
+  },
+  {
+    champ: 'communeAttache',
+    label: 'Commune de rattachement',
+    requis: false,
+    consequence: "Elle est reprise de l'école de rattachement quand elle est absente.",
+    alias: ['commune_attache', 'commune', 'arrondissement_attache'],
+  },
+  {
+    champ: 'departementAttache',
+    label: 'Département de rattachement',
+    requis: false,
+    consequence: "Il est repris de l'école de rattachement quand il est absent.",
+    alias: ['departement_attache', 'departement', 'dept_attache'],
+  },
+  {
+    champ: 'regionAttache',
+    label: 'Région de rattachement',
+    requis: false,
+    consequence: "Elle est reprise de l'école de rattachement quand elle est absente.",
+    alias: ['region_attache', 'region'],
+  },
+  {
+    champ: 'zoneAttache',
+    label: 'Zone de rattachement',
+    requis: false,
+    consequence: "Elle est reprise de l'école de rattachement quand elle est absente.",
+    alias: ['zone_attache', 'zone', 'milieu_attache'],
+  },
+  {
+    champ: 'ancienneteCarriereAns',
+    label: 'Ancienneté de carrière (ans)',
+    requis: false,
+    consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
+    alias: ['anciennete_carriere_ans', 'anciennete_carriere', 'anciennete', 'annees_service', 'anciennete_generale'],
+  },
+  {
+    champ: 'anciennetePosteAns',
+    label: 'Ancienneté au poste (ans)',
+    requis: false,
+    consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
+    alias: ['anciennete_poste_ans', 'anciennete_poste', 'annees_poste', 'anciennete_dans_le_poste', 'anciennete_poste_actuel'],
+  },
+  {
+    champ: 'situationFamiliale',
+    label: 'Situation familiale',
+    requis: false,
+    consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
+    alias: ['situation_familiale', 'situation_matrimoniale', 'statut_matrimonial', 'situation'],
+  },
+  {
+    champ: 'nbEnfants',
+    label: "Nombre d'enfants",
+    requis: false,
+    consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
+    alias: ['nb_enfants', 'nombre_enfants', 'enfants', 'nb_enfant', 'nombre_enfants_a_charge', 'enfants_a_charge'],
+  },
+  {
+    champ: 'formationContinue',
+    label: 'Formation continue',
+    requis: false,
+    consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
+    alias: ['formation_continue', 'formations', 'nb_formations', 'formation', 'formations_continues'],
+  },
+  {
+    champ: 'statut',
+    label: 'Statut',
+    requis: false,
+    consequence: "Tous les enseignants sont alors considérés comme en activité.",
+    alias: ['statut', 'statut_ens', 'position', 'situation_administrative'],
+  },
+  {
+    champ: 'payeParEtat',
+    label: "Payé par l'État",
+    requis: false,
+    consequence: "Tous les enseignants sont alors considérés comme payés par l'État.",
+    alias: ['paye_par_etat', 'paye_etat', 'prise_en_charge', 'source_salaire', 'payeur'],
+  },
+  {
+    champ: 'sexe',
+    label: 'Sexe',
+    requis: false,
+    consequence: 'Information non affichée dans la synthèse des vœux.',
+    alias: ['sexe', 'genre', 'sex'],
+  },
+  {
+    champ: 'categorie',
+    label: 'Catégorie',
+    requis: false,
+    consequence: 'Information non affichée dans la synthèse des vœux.',
+    alias: ['categorie', 'grade', 'corps'],
+  },
+  {
+    champ: 'fonction',
+    label: 'Fonction',
+    requis: false,
+    consequence: 'Information non affichée dans la synthèse des vœux.',
+    alias: ['fonction', 'emploi', 'poste_occupe'],
+  },
+  {
+    champ: 'sousSystemeEns',
+    label: "Sous-système de l'enseignant",
+    requis: false,
+    consequence: "Le sous-système de l'école d'attache est retenu ; à défaut, l'enseignant est compatible avec tous les postes.",
+    alias: ['sous_systeme', 'sous_systeme_enseignant', 'langue', 'formation_initiale', 'langue_formation', 'subsystem', 'sous_systeme_formation'],
+  },
+  {
+    champ: 'voeu1',
+    label: 'Vœu 1 (école sollicitée)',
+    requis: false,
+    consequence: "Sans vœu, l'enseignant n'a pas demandé de mutation : seul le redéploiement obligatoire peut le concerner.",
+    alias: ['voeu_1', 'voeu1', 'choix_1', 'ecole_voeu_1', 'ecole_sollicitee_1', 'premier_voeu'],
+  },
+  {
+    champ: 'voeu2',
+    label: 'Vœu 2',
+    requis: false,
+    consequence: 'Un seul vœu est examiné.',
+    alias: ['voeu_2', 'voeu2', 'choix_2', 'ecole_voeu_2', 'ecole_sollicitee_2', 'deuxieme_voeu'],
+  },
+  {
+    champ: 'voeu3',
+    label: 'Vœu 3',
+    requis: false,
+    consequence: 'Deux vœux au plus sont examinés.',
+    alias: ['voeu_3', 'voeu3', 'choix_3', 'ecole_voeu_3', 'ecole_sollicitee_3', 'troisieme_voeu'],
+  },
+  {
+    champ: 'motifDemande',
+    label: 'Motif de la demande',
+    requis: false,
+    consequence: 'Aucune bonification pour motif justifié (santé, regroupement familial) ne peut être accordée.',
+    alias: ['motif_demande', 'motif', 'motif_mutation', 'raison_demande', 'motif_bonification'],
+  },
+  {
+    champ: 'ecoleMotif',
+    label: 'École visée par le motif',
+    requis: false,
+    consequence: 'La bonification d’un motif justifié porte sur le premier vœu.',
+    alias: ['ecole_motif', 'ecole_visee_motif', 'ecole_bonification', 'ecole_regroupement'],
+  },
+  {
+    champ: 'anneesZoneNiveau1',
+    label: 'Années en école de niveau 1',
+    requis: false,
+    consequence: 'Aucun point de service en zone difficile (niveau 1).',
+    alias: ['annees_zone_niveau_1', 'annees_niveau_1', 'service_zone_niveau_1', 'annees_zone_difficile_1', 'annees_n1', 'annees_zone_difficulte_1'],
+  },
+  {
+    champ: 'anneesZoneNiveau2',
+    label: 'Années en école de niveau 2',
+    requis: false,
+    consequence: 'Aucun point de service en zone difficile (niveau 2).',
+    alias: ['annees_zone_niveau_2', 'annees_niveau_2', 'service_zone_niveau_2', 'annees_zone_difficile_2', 'annees_n2', 'annees_zone_difficulte_2'],
+  },
+  {
+    champ: 'rangTirage',
+    label: 'Rang de tirage au sort',
+    requis: false,
+    consequence: "À ancienneté et âge égaux, le départage se fait par matricule : le tirage doit être consigné au procès-verbal.",
+    alias: ['rang_tirage', 'tirage', 'tirage_au_sort', 'rang_tirage_sort'],
+  },
+]
+
+/** Index des champs par nom, pour retrouver un libellé depuis un identifiant. */
+export const FIELD_BY_NAME: Record<string, FieldDefinition> = Object.fromEntries(
+  [...SCHOOL_FIELDS, ...TEACHER_FIELDS].map(f => [f.champ, f]),
+)
+
+/** Champs « effectif élèves » : leur présence conditionne les indicateurs pédagogiques. */
+export const STUDENT_FIELDS = [
+  'effectifTotalEleves',
+  'effectifFilles',
+  'effectifGarcons',
+  'effectifCI',
+  'effectifCP',
+  'effectifCE1',
+  'effectifCE2',
+  'effectifCM1',
+  'effectifCM2',
+] as const
