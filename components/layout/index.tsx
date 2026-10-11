@@ -7,8 +7,9 @@
 
 import { useState, useEffect, type ReactNode } from 'react'
 // ACCÈS DÉSACTIVÉ : `LogOut` et `UserRound` ne servent qu'à la personne connectée, à réimporter avec elle.
-import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, Server, ShieldCheck, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Home, Menu, Moon, RotateCcw, Server, ShieldCheck, Sun, Trash2, X } from 'lucide-react'
 import { apiClient } from '@/src/shared/api/client'
+import { useTheme } from '@/src/shared/ui/Theme'
 import type { SchoolSeverity, Zone, ZoneSecurite } from '@/types/education'
 import { LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '@/lib/simulation/libelles'
 import type { GlobalFilters, TerritorySelection } from '@/lib/analytics/territory'
@@ -161,6 +162,8 @@ export function Topbar({
   // utilisateur: string
   // onDeconnexion: () => void
 }) {
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <header className="topbar">
       <button type="button" className="mobile-menu" onClick={onOuvrirMenu} aria-label="Ouvrir le menu de navigation">
@@ -201,6 +204,15 @@ export function Topbar({
             Analyste
           </button>
         </div>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+          aria-label={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+        >
+          {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+        </button>
         <button type="button" className="icon-button" onClick={onEffacer} title="Effacer les données de cette session">
           <Trash2 size={16} aria-hidden="true" />
           <span className="sr-only">Effacer les données de cette session</span>

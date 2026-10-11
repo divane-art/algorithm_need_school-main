@@ -75,13 +75,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded shadow-lg border text-sm transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-              t.tone === 'success'
-                ? 'bg-[#e8f5ee] border-[#b6ddc7] text-[#1f6b4a]'
-                : t.tone === 'alert'
-                ? 'bg-[#fdefef] border-[#e8b9b9] text-[#9c3b3b]'
-                : 'bg-[#e2f2f2] border-[#b4dada] text-[#01595c]'
-            }`}
+            style={{
+              backgroundColor:
+                t.tone === 'success' ? 'var(--ok-bg)' : t.tone === 'alert' ? 'var(--alert-bg)' : 'var(--info-bg)',
+              borderColor:
+                t.tone === 'success' ? 'var(--ok-line)' : t.tone === 'alert' ? 'var(--alert-line)' : 'var(--info-line)',
+              color:
+                t.tone === 'success' ? 'var(--ok)' : t.tone === 'alert' ? 'var(--alert)' : 'var(--accent-ink)',
+            }}
+            className="pointer-events-auto flex items-start gap-3 p-3.5 rounded shadow-lg border text-sm transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
           >
             <div className="flex-none mt-0.5">
               {t.tone === 'success' && <CheckCircle2 size={16} />}

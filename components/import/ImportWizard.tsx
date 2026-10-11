@@ -334,7 +334,7 @@ function EtapeFichiers({
         className="welcome"
         style={{
           borderLeft: '4px solid var(--primary)',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f4f9f9 100%)',
+          background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-muted) 100%)',
           padding: '24px 28px',
         }}
       >

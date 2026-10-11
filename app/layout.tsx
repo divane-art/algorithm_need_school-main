@@ -37,12 +37,22 @@ export const viewport: Viewport = {
 }
 
 import { ToastProvider } from '@/src/shared/ui/Toast'
+import { ThemeProvider } from '@/src/shared/ui/Theme'
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`${figtree.variable} ${sourceSans.variable}`}>
+    <html lang="fr" className={`${figtree.variable} ${sourceSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('algoplanr.theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
